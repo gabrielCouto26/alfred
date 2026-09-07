@@ -32,13 +32,13 @@ Criar a base executavel do projeto Alfred em Python, incluindo empacotamento, es
 
 ## Subtarefas
 
-- [ ] 1.1 Criar manifestos e configuracoes minimas do projeto Python conforme dependencias previstas na Tech Spec.
-- [ ] 1.2 Criar a estrutura inicial de pacotes sob `src/alfred/` com modulos vazios ou placeholders seguros para os componentes principais.
-- [ ] 1.3 Implementar o adaptador CLI minimo para aceitar mensagem, `--session`, `--json` e `--no-trace`.
-- [ ] 1.4 Definir codigos de saida e mensagens basicas para sucesso, erro de entrada e erro de configuracao.
-- [ ] 1.5 Configurar a estrutura inicial de testes automatizados.
-- [ ] 1.6 Criar testes de unidade para parsing de argumentos, flags e validacoes basicas da CLI.
-- [ ] 1.7 Criar testes de integracao executando a CLI em processo real com ambiente isolado.
+- [x] 1.1 Criar manifestos e configuracoes minimas do projeto Python conforme dependencias previstas na Tech Spec.
+- [x] 1.2 Criar a estrutura inicial de pacotes sob `src/alfred/` com modulos vazios ou placeholders seguros para os componentes principais.
+- [x] 1.3 Implementar o adaptador CLI minimo para aceitar mensagem, `--session`, `--json` e `--no-trace`.
+- [x] 1.4 Definir codigos de saida e mensagens basicas para sucesso, erro de entrada e erro de configuracao.
+- [x] 1.5 Configurar a estrutura inicial de testes automatizados.
+- [x] 1.6 Criar testes de unidade para parsing de argumentos, flags e validacoes basicas da CLI.
+- [x] 1.7 Criar testes de integracao executando a CLI em processo real com ambiente isolado.
 
 ## Detalhes de Implementacao
 

@@ -1,0 +1,6 @@
+"""Códigos de saída do Alfred."""
+
+EXIT_SUCCESS = 0
+EXIT_INPUT_ERROR = 1
+EXIT_INTERNAL_ERROR = 2
+EXIT_CONFIG_ERROR = 3
