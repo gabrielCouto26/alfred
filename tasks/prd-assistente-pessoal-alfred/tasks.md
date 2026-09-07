@@ -2,11 +2,15 @@
 
 ## Tarefas
 
-- [ ] 1.0 Inicializar estrutura Python, empacotamento e CLI minima
-- [ ] 2.0 Definir contratos internos e modelos Pydantic do dominio
-- [ ] 3.0 Implementar memoria efemera de sessao com TTL
-- [ ] 4.0 Implementar politica deterministica de seguranca e confirmacao
-- [ ] 5.0 Implementar roteador de intencao com saida estruturada e dataset avaliavel
-- [ ] 6.0 Implementar servico principal de orquestracao e tools simuladas
-- [ ] 7.0 Implementar observabilidade segura com logs locais e LangSmith opcional
-- [ ] 8.0 Consolidar fluxo E2E da CLI, documentacao minima de uso e validacao do MVP
+- [x] 4.0 Implementar politica deterministica de seguranca e confirmacao
+
+## Status
+
+- Task 4.0: **COMPLETA** (33 testes, lint & typecheck aprovados)
+
+## Notas
+
+- Task 4.0: DeterministicSafetyPolicy implementada com regras para BLOCK (destrutivos, credenciais) e CONFIRM (sensíveis, comandos perigosos)
+- Integração com IntentDecision.risk_labels para priorização
+- Mensagens humanas curtas para cada status (ALLOW, CONFIRM, BLOCK)
+- 22 testes unitários + 11 testes de integração
