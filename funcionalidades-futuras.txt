@@ -1,0 +1,5 @@
+Funcionalidades que devo implementar no projeto futuramente, seja para estudo ou melhorar o projeto:
+1. Cache
+2. RAG (melhorar respostas do Alfred como personagem)
+3. Observabilidade
+
