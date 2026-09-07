@@ -4,11 +4,13 @@
 
 - [x] 4.0 Implementar politica deterministica de seguranca e confirmacao
 - [x] 5.0 Implementar roteador de intencao com saida estruturada e dataset avaliavel
+- [x] 6.0 Implementar servico principal de orquestracao e tools simuladas
 
 ## Status
 
 - Task 4.0: **COMPLETA** (33 testes, lint & typecheck aprovados)
 - Task 5.0: **COMPLETA** (26 testes, lint & typecheck aprovados)
+- Task 6.0: **COMPLETA** (11 unit tests + 7 integration tests, 100% pass)
 
 ## Notas
 
@@ -27,3 +29,13 @@
 - Evaluation dataset com 20 casos de teste
 - Accuracy calculator com per-category metrics
 - 11 testes unitários de router + 7 de accuracy + 5 de dataset + 3 integration tests
+
+### Task 6.0: AssistantService
+- AssistantServiceImpl coordenando todos os componentes (routing, safety, session, tools)
+- Fluxos completos para todas as categorias de intenção
+- Confirmação interativa para operações sensíveis
+- Persistência de sessão com resumo mínimo (sem mensagem bruta)
+- SimulatedToolsRegistry com contratos simulados sem efeitos colaterais
+- Factory function para fácil instânciação do serviço
+- 11 testes unitários + 7 testes de integração (100% pass)
+- Correção de type mismatch: decision_hash int → str

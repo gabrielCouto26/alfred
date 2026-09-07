@@ -129,3 +129,24 @@ class IntentResponse(BaseModel):
     requires_clarification: bool = Field(default=False, description="Requer clarificação")
     simulated_tool: str | None = Field(default=None, description="Tool simulada")
     risk_labels: list[str] = Field(default_factory=list, description="Rótulos de risco")
+
+
+class CloudTaskIntent(BaseModel):
+    """Intenção de tarefa em nuvem."""
+
+    task_name: str = Field(..., description="Nome da tarefa em nuvem")
+
+
+class LocalTaskIntent(BaseModel):
+    """Intenção de tarefa local."""
+
+    task_name: str = Field(..., description="Nome da tarefa local")
+
+
+class SimulatedToolResponse(BaseModel):
+    """Resposta de tool simulada."""
+
+    status: str = Field(..., description="Status da simulação")
+    intention: str = Field(..., description="Intenção da tool")
+    requires_confirmation: bool = Field(..., description="Requer confirmação")
+    human_message: str = Field(..., description="Mensagem para o usuário")
