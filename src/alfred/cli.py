@@ -1,14 +1,11 @@
 """Adaptador CLI do Alfred."""
 
-import os
-import sys
 import json
 from typing import Annotated
 
 import typer
 
 from alfred.models import AssistantRequest
-
 
 app = typer.Typer(
     name="alfred",
@@ -47,7 +44,7 @@ def main(
     ] = False,
 ) -> int:
     """Processar uma solicitação única do usuário."""
-    
+
     if not message:
         if json_output:
             result = {
@@ -60,7 +57,7 @@ def main(
             typer.echo("Erro: mensagem é obrigatória.", err=True)
             typer.echo("Uso: alfred <mensagem> [--session ID] [--json] [--no-trace]", err=True)
         return 1
-    
+
     try:
         request = AssistantRequest(
             message=message,
@@ -70,9 +67,9 @@ def main(
             interactive_confirmation=True,
             trace_enabled=not no_trace
         )
-        
+
         context = _load_session_context(session)
-        
+
         response = {
             "text": "Alfred: Recebi sua solicitação. Estou processando...",
             "category": "CHITCHAT",
@@ -83,16 +80,16 @@ def main(
                 "trace_enabled": not no_trace
             }
         }
-        
+
         _save_session_context(session, context)
-        
+
         if json_output:
             print(json.dumps(response))
         else:
             typer.echo(response["text"])
-        
+
         return 0
-        
+
     except Exception as exc:
         if json_output:
             result = {

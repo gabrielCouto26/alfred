@@ -3,8 +3,8 @@
 from alfred.contracts import SafetyPolicy
 from alfred.models import (
     AssistantRequest,
-    IntentDecision,
     IntentCategory,
+    IntentDecision,
     SafetyDecision,
     SafetyStatus,
 )

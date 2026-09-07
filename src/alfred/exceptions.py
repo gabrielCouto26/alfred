@@ -1,25 +1,16 @@
-"""Exceções customizadas do Alfred."""
+"""Exceções específicas do Alfred."""
 
 
-class AlfredError(Exception):
-    """Erro base do Alfred."""
-    
-    pass
-
-
-class ConfigurationError(AlfredError):
+class ConfigurationError(RuntimeError):
     """Erro de configuração."""
-    
     pass
 
 
-class InputError(AlfredError):
-    """Erro de entrada inválida."""
-    
+class LLMError(RuntimeError):
+    """Erro de chamada LLM."""
     pass
 
 
-class ToolError(AlfredError):
-    """Erro de execução de tool."""
-    
+class RoutingError(RuntimeError):
+    """Erro de roteamento de intenção."""
     pass

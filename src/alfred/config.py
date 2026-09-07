@@ -3,20 +3,16 @@
 import os
 from functools import lru_cache
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Configurações do Alfred."""
-    
+
     openrouter_api_key: str | None = None
     langsmith_tracing: bool = False
     langsmith_api_key: str | None = None
     session_ttl_seconds: int = 7200
-    
-    class Config:
-        env_prefix = "ALFRED_"
-        case_sensitive = False
 
 
 @lru_cache
