@@ -32,13 +32,13 @@ Implementar armazenamento local de sessao temporaria para permitir contexto curt
 
 ## Subtarefas
 
-- [ ] 3.1 Criar implementacao de `SessionStore` local conforme contrato definido na tarefa 2.0.
-- [ ] 3.2 Implementar `load`, `append` e `prune_expired` com comportamento previsivel quando nao houver sessao existente.
-- [ ] 3.3 Implementar TTL de 2 horas e descarte de contexto expirado.
-- [ ] 3.4 Garantir persistencia em diretorio de app do usuario com opcao de override para testes.
-- [ ] 3.5 Garantir que conteudo bruto de mensagens nao seja persistido por padrao.
-- [ ] 3.6 Criar testes de unidade para carregar, anexar, expirar, limpar e validar schema.
-- [ ] 3.7 Criar testes de integracao com diretorio temporario preservando contexto entre chamadas.
+- [x] 3.1 Criar implementacao de `SessionStore` local conforme contrato definido na tarefa 2.0.
+- [x] 3.2 Implementar `load`, `append` e `prune_expired` com comportamento previsivel quando nao houver sessao existente.
+- [x] 3.3 Implementar TTL de 2 horas e descarte de contexto expirado.
+- [x] 3.4 Garantir persistencia em diretorio de app do usuario com opcao de override para testes.
+- [x] 3.5 Garantir que conteudo bruto de mensagens nao seja persistido por padrao.
+- [x] 3.6 Criar testes de unidade para carregar, anexar, expirar, limpar e validar schema.
+- [x] 3.7 Criar testes de integracao com diretorio temporario preservando contexto entre chamadas.
 
 ## Detalhes de Implementacao
 
