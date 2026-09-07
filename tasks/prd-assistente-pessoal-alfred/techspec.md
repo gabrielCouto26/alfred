@@ -160,6 +160,7 @@ Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para
 
 ### Conformidade com Skills
 
+- `alfred-core-dev-guidelines` (`.agents/skills/alfred-core-dev-guidelines/SKILL.md`): obrigatória em qualquer alteração de código — arquitetura Router First, tools estritas, KISS/YAGNI e regras de segurança.
 - `create-techspec`: aplicada para gerar esta especificação a partir do PRD, após exploração, referências externas e perguntas de clarificação.
 - `create-tasks`: aplicável como próximo passo para decompor esta Tech Spec em tarefas implementáveis sem iniciar código automaticamente.
 - `tester`: aplicável após implementação futura para validar aderência ao PRD, Tech Spec, testes e lints.

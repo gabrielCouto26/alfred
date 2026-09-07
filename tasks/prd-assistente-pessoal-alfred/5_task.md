@@ -7,6 +7,7 @@ Implementar o roteador semantico que classifica mensagens nas categorias do MVP 
 <skills>
 ### Conformidade com Skills
 
+- `alfred-core-dev-guidelines` (`.agents/skills/alfred-core-dev-guidelines/SKILL.md`): obrigatoria em qualquer alteracao de codigo — arquitetura Router First, tools estritas, KISS/YAGNI e regras de seguranca.
 - `execute-task`: aplicavel para implementar esta tarefa a partir deste arquivo.
 - `tester`: aplicavel apos a implementacao para validar testes, lint e aderencia ao PRD/Tech Spec.
 - `resolver`: aplicavel se a validacao encontrar falhas de build, lint, testes ou comportamento.
