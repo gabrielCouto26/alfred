@@ -32,13 +32,13 @@ Definir os modelos e contratos internos que serao usados pelos componentes do Al
 
 ## Subtarefas
 
-- [ ] 2.1 Criar modelos para `AssistantRequest` e `AssistantResponse`.
-- [ ] 2.2 Criar modelos para `IntentDecision` com categorias previstas no PRD e Tech Spec.
-- [ ] 2.3 Criar modelos para `SafetyDecision` e status `ALLOW`, `CONFIRM` e `BLOCK`.
-- [ ] 2.4 Criar modelos para `SessionContext` e `SessionTurn` com schema versionado e sem conteudo bruto por padrao.
-- [ ] 2.5 Definir protocolos/interfaces internos para servico, roteador, memoria e politica de seguranca.
-- [ ] 2.6 Criar testes de unidade para validacao, defaults, enumeracoes e rejeicao de dados invalidos.
-- [ ] 2.7 Criar testes de integracao garantindo que os contratos trafegam corretamente entre componentes fake.
+- [x] 2.1 Criar modelos para `AssistantRequest` e `AssistantResponse`.
+- [x] 2.2 Criar modelos para `IntentDecision` com categorias previstas no PRD e Tech Spec.
+- [x] 2.3 Criar modelos para `SafetyDecision` e status `ALLOW`, `CONFIRM` e `BLOCK`.
+- [x] 2.4 Criar modelos para `SessionContext` e `SessionTurn` com schema versionado e sem conteudo bruto por padrao.
+- [x] 2.5 Definir protocolos/interfaces internos para servico, roteador, memoria e politica de seguranca.
+- [x] 2.6 Criar testes de unidade para validacao, defaults, enumeracoes e rejeicao de dados invalidos.
+- [x] 2.7 Criar testes de integracao garantindo que os contratos trafegam corretamente entre componentes fake.
 
 ## Detalhes de Implementacao
 
@@ -56,9 +56,9 @@ Definir os modelos e contratos internos que serao usados pelos componentes do Al
 
 ## Testes da Tarefa
 
-- [ ] Testes de unidade para criacao, validacao, serializacao e rejeicao de payloads invalidos.
-- [ ] Testes de integracao com componentes fake usando os contratos em conjunto.
-- [ ] Testes E2E nao aplicaveis nesta tarefa, exceto se algum contrato for exposto diretamente pela CLI ja existente.
+- [x] Testes de unidade para criacao, validacao, serializacao e rejeicao de payloads invalidos.
+- [x] Testes de integracao com componentes fake usando os contratos em conjunto.
+- [x] Testes E2E nao aplicaveis nesta tarefa, exceto se algum contrato for exposto diretamente pela CLI ja existente.
 
 ## Arquivos relevantes
 

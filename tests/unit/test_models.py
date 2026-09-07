@@ -1,8 +1,23 @@
 """Testes unitários para o módulo models."""
 
 import pytest
+from datetime import datetime, timedelta
 
-from alfred.models import AssistantRequest, IntentDecision, SafetyDecision, AssistantResponse
+from alfred.models import (
+    AssistantRequest,
+    IntentDecision,
+    SafetyDecision,
+    AssistantResponse,
+    SessionTurn,
+    SessionContext,
+    SessionStoreConfig,
+    IntentRequest,
+    IntentResponse,
+    IntentCategory,
+    SafetyStatus,
+    OutputFormat,
+    Channel,
+)
 
 
 class TestAssistantRequest:
@@ -163,3 +178,219 @@ class TestAssistantResponse:
         )
         
         assert response.json_payload == {"result": "data"}
+
+
+class TestIntentCategory:
+    """Testes para enum de categorias de intenção."""
+    
+    def test_intent_categories(self):
+        """Deve ter todas as categorias esperadas."""
+        assert IntentCategory.CHITCHAT.value == "CHITCHAT"
+        assert IntentCategory.CLOUD_TASK.value == "CLOUD_TASK"
+        assert IntentCategory.LOCAL_TASK.value == "LOCAL_TASK"
+        assert IntentCategory.AMBIGUOUS.value == "AMBIGUOUS"
+        assert IntentCategory.BLOCKED.value == "BLOCKED"
+        assert IntentCategory.OUT_OF_SCOPE.value == "OUT_OF_SCOPE"
+
+
+class TestSafetyStatus:
+    """Testes para enum de status de segurança."""
+    
+    def test_safety_statuses(self):
+        """Deve ter todos os status esperados."""
+        assert SafetyStatus.ALLOW.value == "ALLOW"
+        assert SafetyStatus.CONFIRM.value == "CONFIRM"
+        assert SafetyStatus.BLOCK.value == "BLOCK"
+
+
+class TestChannel:
+    """Testes para enum de canais."""
+    
+    def test_channels(self):
+        """Deve ter todos os canais esperados."""
+        assert Channel.CLI.value == "cli"
+        assert Channel.WHATSAPP.value == "whatsapp"
+
+
+class TestOutputFormat:
+    """Testes para enum de formatos de saída."""
+    
+    def test_output_formats(self):
+        """Deve ter todos os formatos esperados."""
+        assert OutputFormat.TEXT.value == "text"
+        assert OutputFormat.JSON.value == "json"
+
+
+class TestSessionTurn:
+    """Testes para SessionTurn."""
+    
+    def test_session_turn_creation(self):
+        """Deve criar SessionTurn válido."""
+        now = datetime.now()
+        expires = now + timedelta(hours=2)
+        
+        turn = SessionTurn(
+            created_at=now,
+            expires_at=expires,
+            category=IntentCategory.CHITCHAT,
+            summary="Saudação inicial",
+            decision_hash="abc123",
+            category_label="Greeting",
+            risk_labels=[]
+        )
+        
+        assert turn.category == IntentCategory.CHITCHAT
+        assert turn.summary == "Saudação inicial"
+        assert turn.decision_hash == "abc123"
+    
+    def test_session_turn_with_risk_labels(self):
+        """Deve aceitar rótulos de risco."""
+        now = datetime.now()
+        expires = now + timedelta(hours=2)
+        
+        turn = SessionTurn(
+            created_at=now,
+            expires_at=expires,
+            category=IntentCategory.CLOUD_TASK,
+            summary="Busca na web",
+            decision_hash="def456",
+            risk_labels=["cost", "external_api"]
+        )
+        
+        assert len(turn.risk_labels) == 2
+
+
+class TestSessionContext:
+    """Testes para SessionContext."""
+    
+    def test_session_context_creation(self):
+        """Deve criar SessionContext válido."""
+        now = datetime.now()
+        expires = now + timedelta(hours=2)
+        
+        context = SessionContext(
+            session_id="test-session",
+            created_at=now,
+            expires_at=expires,
+            version="1.0"
+        )
+        
+        assert context.session_id == "test-session"
+        assert context.version == "1.0"
+        assert context.turns == []
+    
+    def test_session_context_with_turns(self):
+        """Deve aceitar lista de turnos."""
+        now = datetime.now()
+        expires = now + timedelta(hours=2)
+        
+        turn = SessionTurn(
+            created_at=now,
+            expires_at=expires,
+            category=IntentCategory.CHITCHAT,
+            summary="Saudação",
+            decision_hash="abc123"
+        )
+        
+        context = SessionContext(
+            session_id="test-session",
+            turns=[turn],
+            created_at=now,
+            expires_at=expires
+        )
+        
+        assert len(context.turns) == 1
+        assert context.turns[0].summary == "Saudação"
+    
+    def test_session_context_version_default(self):
+        """Deve ter versão padrão."""
+        now = datetime.now()
+        expires = now + timedelta(hours=2)
+        
+        context = SessionContext(
+            session_id="test-session",
+            created_at=now,
+            expires_at=expires
+        )
+        
+        assert context.version == "1.0"
+
+
+class TestSessionStoreConfig:
+    """Testes para SessionStoreConfig."""
+    
+    def test_session_store_config_defaults(self):
+        """Deve usar valores padrão."""
+        config = SessionStoreConfig()
+        
+        assert config.ttl_seconds == 7200
+        assert config.max_turns == 10
+        assert config.storage_path is None
+    
+    def test_session_store_config_custom(self):
+        """Deve aceitar valores customizados."""
+        config = SessionStoreConfig(
+            ttl_seconds=3600,
+            max_turns=5,
+            storage_path="/tmp/sessions"
+        )
+        
+        assert config.ttl_seconds == 3600
+        assert config.max_turns == 5
+        assert config.storage_path == "/tmp/sessions"
+
+
+class TestIntentRequest:
+    """Testes para IntentRequest."""
+    
+    def test_intent_request_creation(self):
+        """Deve criar IntentRequest válido."""
+        request = IntentRequest(
+            message="Olá",
+            session_id="test-123",
+            channel=Channel.CLI
+        )
+        
+        assert request.message == "Olá"
+        assert request.channel == Channel.CLI
+        assert request.history == []
+    
+    def test_intent_request_with_history(self):
+        """Deve aceitar histórico."""
+        request = IntentRequest(
+            message="Continua",
+            session_id="test-123",
+            channel=Channel.CLI,
+            history=["Olá", "Como vai?"]
+        )
+        
+        assert len(request.history) == 2
+
+
+class TestIntentResponse:
+    """Testes para IntentResponse."""
+    
+    def test_intent_response_creation(self):
+        """Deve criar IntentResponse válido."""
+        response = IntentResponse(
+            category=IntentCategory.CHITCHAT,
+            confidence=0.95,
+            rationale_code="greeting_detected"
+        )
+        
+        assert response.category == IntentCategory.CHITCHAT
+        assert response.confidence == 0.95
+        assert response.simulated_tool is None
+    
+    def test_intent_response_with_tool_and_risk(self):
+        """Deve aceitar tool e rótulos de risco."""
+        response = IntentResponse(
+            category=IntentCategory.CLOUD_TASK,
+            confidence=0.85,
+            rationale_code="task_detected",
+            simulated_tool="web_search",
+            risk_labels=["cost", "external_api"]
+        )
+        
+        assert response.simulated_tool == "web_search"
+        assert len(response.risk_labels) == 2
