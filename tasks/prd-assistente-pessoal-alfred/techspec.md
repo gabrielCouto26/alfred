@@ -8,6 +8,8 @@ A arquitetura será modular e simples: um adaptador CLI chama um serviço de apl
 
 ## Arquitetura do Sistema
 
+
+
 ### Visão Geral dos Componentes
 
 - `alfred.cli`: componente novo responsável por receber um comando único (`alfred "pedido"`), flags operacionais (`--session`, `--json`, `--no-trace`) e imprimir saída em texto humano por padrão.
@@ -23,6 +25,8 @@ A arquitetura será modular e simples: um adaptador CLI chama um serviço de apl
 Fluxo de dados: CLI normaliza entrada e `session_id`; `assistant_service` carrega contexto válido do `session_store`; `intent_router` retorna decisão estruturada; `policy` bloqueia ou exige confirmação quando necessário; o serviço gera resposta final; observabilidade registra metadados; memória recebe o resumo mínimo da interação.
 
 ## Design de Implementação
+
+
 
 ### Interfaces Principais
 
@@ -42,6 +46,8 @@ class SafetyPolicy(Protocol):
     def evaluate(self, decision: IntentDecision, request: AssistantRequest) -> SafetyDecision: ...
 ```
 
+
+
 ### Modelos de Dados
 
 - `AssistantRequest`: `message`, `session_id`, `channel="cli"`, `output_format`, `interactive_confirmation`, `trace_enabled`.
@@ -50,6 +56,8 @@ class SafetyPolicy(Protocol):
 - `AssistantResponse`: `text`, `category`, `safety_status`, `session_id`, `metadata`, `json_payload` opcional.
 - `SessionContext`: lista curta de `SessionTurn` com `created_at`, `expires_at`, `category`, `summary`, `decision_hash`; sem conteúdo bruto por padrão.
 - Persistência: arquivo local em diretório de app do usuário, preferencialmente JSON Lines ou JSON compacto por sessão. O schema deve incluir versão para migração futura.
+
+
 
 ### Endpoints de API
 
@@ -61,7 +69,11 @@ Não aplicável ao MVP. A primeira versão não terá servidor HTTP, webhook, AP
 - LangSmith: tracing e datasets/evals, com política de não registrar conteúdo bruto. Traces devem conter tags, hashes, categoria, latência e status de segurança.
 - Sistema local de arquivos: apenas para configuração, memória efêmera e dataset manual. Não há execução de shell livre.
 
+
+
 ## Abordagem de Testes
+
+
 
 ### Testes Unidade
 
@@ -71,17 +83,23 @@ Não aplicável ao MVP. A primeira versão não terá servidor HTTP, webhook, AP
 - `AssistantService`: cobrir fluxo permitido, bloqueado, ambíguo, fora de escopo, confirmação interativa e saída JSON opcional.
 - CLI: validar argumentos, flags, códigos de saída e renderização de texto sem depender de cor.
 
+
+
 ### Testes de Integração
 
 - Fluxo CLI completo com LLM mockado, memória em diretório temporário e telemetry fake.
 - Dataset manual de intenções com acurácia calculável, mirando a métrica de 85% do PRD.
 - Integração opcional com LangSmith em ambiente configurado, sem conteúdo bruto.
 
+
+
 ### Testes de E2E
 
 Não há frontend no MVP; Playwright não se aplica. O equivalente E2E será execução da CLI em processo real com ambiente isolado, cobrindo texto padrão e `--json`.
 
 ## Sequenciamento de Desenvolvimento
+
+
 
 ### Ordem de Construção
 
@@ -93,12 +111,16 @@ Não há frontend no MVP; Playwright não se aplica. O equivalente E2E será exe
 6. Implementar `AssistantService`, tools simuladas, renderização texto/JSON e prompt interativo de confirmação.
 7. Adicionar observabilidade LangSmith sem conteúdo bruto, dataset de avaliação e testes de integração.
 
+
+
 ### Dependências Técnicas
 
 - Python moderno com gerenciador `uv` recomendado para projeto, lockfile e execução local.
 - Dependências prováveis: `langchain`, integração OpenRouter compatível, `pydantic`, `typer`, `platformdirs`, `pytest` e SDK/configuração LangSmith.
 - Chaves: `OPENROUTER_API_KEY`; LangSmith opcional com `LANGSMITH_TRACING` e `LANGSMITH_API_KEY`.
 - Disponibilidade de rede para chamadas LLM e tracing quando habilitado.
+
+
 
 ## Monitoramento e Observabilidade
 
@@ -107,6 +129,8 @@ O MVP usará LangSmith para tracing/eval e logs locais estruturados, evitando co
 Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para bloqueios/confirmações e `ERROR` para falhas de provedor/configuração. Integração com Grafana não será criada no MVP; os nomes de métricas e campos de log devem facilitar um exporter futuro.
 
 ## Considerações Técnicas
+
+
 
 ### Decisões Principais
 
@@ -117,6 +141,8 @@ Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para
 - LangGraph fica fora do MVP por adicionar orquestração stateful mais poderosa do que o necessário; pode entrar quando houver workflows duráveis ou human-in-the-loop mais complexos.
 - Tools simuladas substituem execução real para preservar segurança e estudar function/tool calling sem efeitos colaterais.
 
+
+
 ### Riscos Conhecidos
 
 - Classificação LLM pode variar; mitigar com schemas estritos, dataset manual, exemplos de eval e regras determinísticas de segurança.
@@ -124,9 +150,13 @@ Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para
 - Confirmação interativa conflita parcialmente com uso assíncrono; aceitar no MVP CLI e revisar quando WhatsApp voltar ao escopo.
 - Lista de comandos perigosos nunca será completa; tratar blacklist como camada adicional, não como única barreira, e manter shell livre fora do escopo.
 
+
+
 ### Conformidade com Rules
 
 - Nenhuma pasta de rules foi encontrada em `.agents/rules` do projeto ou em `~/.agents/rules` durante a análise. A Tech Spec assume apenas as restrições explícitas do PRD, do documento base e desta solicitação.
+
+
 
 ### Conformidade com Skills
 
@@ -134,6 +164,8 @@ Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para
 - `create-tasks`: aplicável como próximo passo para decompor esta Tech Spec em tarefas implementáveis sem iniciar código automaticamente.
 - `tester`: aplicável após implementação futura para validar aderência ao PRD, Tech Spec, testes e lints.
 - `resolver`: aplicável apenas se validações futuras encontrarem falhas de build, lint, testes ou comportamento.
+
+
 
 ### Arquivos relevantes e dependentes
 
@@ -150,3 +182,4 @@ Logs locais devem registrar nível `INFO` para decisões normais, `WARNING` para
 - `src/alfred/tools/simulated_registry.py`: futuro registro de tools simuladas.
 - `src/alfred/observability/telemetry.py`: futura camada de logs/tracing.
 - `tests/`: futura suíte unitária, integração e E2E de CLI.
+
