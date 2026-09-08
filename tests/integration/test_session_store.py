@@ -3,8 +3,6 @@
 import time
 from datetime import datetime, timedelta
 
-import pytest
-
 from alfred.memory import LocalSessionStore
 from alfred.models import IntentCategory, SessionStoreConfig, SessionTurn
 
@@ -52,7 +50,9 @@ class TestSessionStoreIntegration:
 
     def test_concurrent_access(self, temp_app_dir):
         """Deve ser thread-safe para acesso concorrente."""
-        config = SessionStoreConfig(storage_path=str(temp_app_dir))
+        config = SessionStoreConfig(
+            storage_path=str(temp_app_dir), max_turns=50
+        )
         store = LocalSessionStore(config=config)
 
         session_id = "concurrent-test"

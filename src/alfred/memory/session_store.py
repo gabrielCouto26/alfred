@@ -16,7 +16,7 @@ class LocalSessionStore(SessionStore):
 
     def __init__(self, config: SessionStoreConfig | None = None):
         self._config = config or SessionStoreConfig()
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._app_dir = Path(user_data_dir("alfred", "Alfred"))
         self._storage_path = Path(self._config.storage_path or self._app_dir)
         self._storage_path.mkdir(parents=True, exist_ok=True)
@@ -96,4 +96,9 @@ class LocalSessionStore(SessionStore):
     def _save_context(self, path: Path, context: SessionContext) -> None:
         """Salvar contexto em arquivo."""
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(context.model_dump(), f, ensure_ascii=False, indent=2)
+            json.dump(
+                context.model_dump(mode="json"),
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )

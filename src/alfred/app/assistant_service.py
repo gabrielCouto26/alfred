@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+from alfred import observability
 from alfred.contracts import AssistantService, IntentRouter, SafetyPolicy, SessionStore
 from alfred.models import (
     AssistantRequest,
@@ -39,31 +40,89 @@ class AssistantServiceImpl(AssistantService):
 
     def handle(self, request: AssistantRequest) -> AssistantResponse:
         """Processar uma solicitação e retornar resposta."""
+        trace_id = ""
+        telemetry = observability.get_telemetry_client()
+        start_time = datetime.now()
+
         try:
             session_id = request.session_id
             context = self._session_store.load(session_id)
 
+            if request.trace_enabled:
+                trace_id = telemetry.generate_trace_id()
+                telemetry.emit_request(session_id, trace_id)
+
             intent_decision = self._intent_router.classify(request, context)
             safety_decision = self._safety_policy.evaluate(intent_decision, request)
 
+            if request.trace_enabled and intent_decision:
+                latency_ms = (datetime.now() - start_time).total_seconds() * 1000
+                telemetry.emit_classification(
+                    session_id=session_id,
+                    category=intent_decision.category.value,
+                    confidence=intent_decision.confidence,
+                    rationale_code=intent_decision.rationale_code,
+                    trace_id=trace_id,
+                    latency_ms=latency_ms,
+                )
+                telemetry.emit_safety_check(
+                    session_id=session_id,
+                    category=intent_decision.category.value,
+                    safety_status=safety_decision.status.value,
+                    decision_hash=intent_decision.decision_hash,
+                    trace_id=trace_id,
+                )
+
             if safety_decision.status == SafetyStatus.BLOCK:
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_blocked_response(
                     request, intent_decision, safety_decision
                 )
 
             if safety_decision.status == SafetyStatus.CONFIRM:
                 if not request.interactive_confirmation:
+                    if request.trace_enabled:
+                        telemetry.emit_response(
+                            session_id=session_id,
+                            category=intent_decision.category.value,
+                            safety_status=safety_decision.status.value,
+                            decision_hash=intent_decision.decision_hash,
+                            trace_id=trace_id,
+                        )
                     return self._build_blocked_response(
                         request, intent_decision, safety_decision
                     )
                 confirmed = self._prompt_confirmation(safety_decision.human_message)
                 if not confirmed:
+                    if request.trace_enabled:
+                        telemetry.emit_response(
+                            session_id=session_id,
+                            category=intent_decision.category.value,
+                            safety_status=safety_decision.status.value,
+                            decision_hash=intent_decision.decision_hash,
+                            trace_id=trace_id,
+                        )
                     return self._build_blocked_response(
                         request, intent_decision, safety_decision
                     )
 
             if intent_decision.category == IntentCategory.CHITCHAT:
                 text = self._generate_chitchat_response(intent_decision, request)
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_success_response(
                     request, intent_decision, safety_decision, text
                 )
@@ -73,12 +132,28 @@ class AssistantServiceImpl(AssistantService):
                     text = intent_decision.required_clarification
                 else:
                     text = "Não entendi. Pode ser mais específico?"
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_ambiguous_response(
                     request, intent_decision, safety_decision, text
                 )
 
             if intent_decision.category == IntentCategory.CLOUD_TASK:
                 if not intent_decision.simulated_tool_name:
+                    if request.trace_enabled:
+                        telemetry.emit_response(
+                            session_id=session_id,
+                            category=intent_decision.category.value,
+                            safety_status=safety_decision.status.value,
+                            decision_hash=intent_decision.decision_hash,
+                            trace_id=trace_id,
+                        )
                     return self._build_ambiguous_response(
                         request,
                         intent_decision,
@@ -87,12 +162,28 @@ class AssistantServiceImpl(AssistantService):
                     )
                 task = CloudTaskIntent(task_name=intent_decision.simulated_tool_name)
                 tool_response = self._simulated_tools_registry.simulate_cloud_task(task)
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_task_response(
                     request, intent_decision, safety_decision, tool_response
                 )
 
             if intent_decision.category == IntentCategory.LOCAL_TASK:
                 if not intent_decision.simulated_tool_name:
+                    if request.trace_enabled:
+                        telemetry.emit_response(
+                            session_id=session_id,
+                            category=intent_decision.category.value,
+                            safety_status=safety_decision.status.value,
+                            decision_hash=intent_decision.decision_hash,
+                            trace_id=trace_id,
+                        )
                     return self._build_ambiguous_response(
                         request,
                         intent_decision,
@@ -101,19 +192,51 @@ class AssistantServiceImpl(AssistantService):
                     )
                 task = LocalTaskIntent(task_name=intent_decision.simulated_tool_name)
                 tool_response = self._simulated_tools_registry.simulate_local_task(task)
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_task_response(
                     request, intent_decision, safety_decision, tool_response
                 )
 
             if intent_decision.category == IntentCategory.OUT_OF_SCOPE:
                 text = "Estou fora de escopo neste momento."
+                if request.trace_enabled:
+                    telemetry.emit_response(
+                        session_id=session_id,
+                        category=intent_decision.category.value,
+                        safety_status=safety_decision.status.value,
+                        decision_hash=intent_decision.decision_hash,
+                        trace_id=trace_id,
+                    )
                 return self._build_out_of_scope_response(
                     request, intent_decision, safety_decision, text
                 )
 
+            if request.trace_enabled:
+                telemetry.emit_response(
+                    session_id=session_id,
+                    category=intent_decision.category.value,
+                    safety_status=safety_decision.status.value,
+                    decision_hash=intent_decision.decision_hash,
+                    trace_id=trace_id,
+                )
             return self._build_error_response(request, "classificação não tratada")
 
         except Exception as exc:
+            if request.trace_enabled:
+                telemetry.emit_response(
+                    session_id=session_id,
+                    category="AMBIGUOUS",
+                    safety_status="BLOCK",
+                    decision_hash="",
+                    trace_id=trace_id,
+                )
             return self._build_error_response(request, str(exc))
 
     def _build_blocked_response(
@@ -236,9 +359,7 @@ class AssistantServiceImpl(AssistantService):
                 f"[{safety_decision.status.value}] "
                 f"{intent_decision.category.value}"
             ),
-            decision_hash=str(
-                hash(str(intent_decision.model_dump())) % (10**8)
-            ),
+            decision_hash=intent_decision.decision_hash,
             category_label=intent_decision.category.value,
             risk_labels=intent_decision.risk_labels,
         )
@@ -249,7 +370,7 @@ class AssistantServiceImpl(AssistantService):
         try:
             response = input(f"{message} (s/N): ")
             return response.lower().strip() in ("s", "sim", "y", "yes")
-        except EOFError:
+        except (EOFError, OSError):
             return False
 
     def _generate_chitchat_response(

@@ -1,19 +1,17 @@
 """Testes de integração para AssistantService."""
 
-from datetime import datetime, timedelta
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from alfred.app.assistant_service import AssistantServiceImpl
 from alfred.app.__init__ import SimulatedToolsRegistry, create_assistant_service
+from alfred.app.assistant_service import AssistantServiceImpl
 from alfred.memory.session_store import LocalSessionStore
 from alfred.models import (
     AssistantRequest,
     IntentCategory,
+    IntentDecision,
     SafetyStatus,
-    SessionContext,
     SessionStoreConfig,
 )
 from alfred.routing.intent_router import IntentRouterImpl
@@ -35,7 +33,7 @@ def session_store(temp_dir):
 @pytest.fixture
 def full_assistant_service(session_store, temp_dir):
     mock_router = MagicMock(spec=IntentRouterImpl)
-    mock_router.classify.return_value = MagicMock(
+    mock_router.classify.return_value = IntentDecision(
         category=IntentCategory.CHITCHAT,
         confidence=0.95,
         rationale_code="mocked",
@@ -50,6 +48,11 @@ def full_assistant_service(session_store, temp_dir):
         simulated_tools_registry=registry,
     )
     return service
+
+
+def _set_classification(service, **kwargs) -> None:
+    """Configurar la clasificación del router mockeado."""
+    service._intent_router.classify.return_value = IntentDecision(**kwargs)
 
 
 class TestAssistantServiceIntegration:
@@ -67,6 +70,13 @@ class TestAssistantServiceIntegration:
 
     @pytest.mark.integration
     def test_integration_flow_cloud_task(self, full_assistant_service, session_store):
+        _set_classification(
+            full_assistant_service,
+            category=IntentCategory.CLOUD_TASK,
+            confidence=0.9,
+            rationale_code="cloud_task_detected",
+            simulated_tool_name="schedule_meeting",
+        )
         request = AssistantRequest(
             message="Agende uma reunião com equipe",
             session_id="integration_test_2",
@@ -80,6 +90,13 @@ class TestAssistantServiceIntegration:
 
     @pytest.mark.integration
     def test_integration_flow_local_task(self, full_assistant_service, session_store):
+        _set_classification(
+            full_assistant_service,
+            category=IntentCategory.LOCAL_TASK,
+            confidence=0.9,
+            rationale_code="local_task_detected",
+            simulated_tool_name="generate_report",
+        )
         request = AssistantRequest(
             message="Gerar relatório de vendas",
             session_id="integration_test_3",
@@ -132,7 +149,9 @@ class TestAssistantServiceIntegration:
 
     @pytest.mark.integration
     def test_integration_factory_function(self, temp_dir):
-        service = create_assistant_service()
+        with patch("alfred.routing.intent_router.create_llm_client") as mock_create:
+            mock_create.return_value = MagicMock()
+            service = create_assistant_service()
 
         assert isinstance(service, AssistantServiceImpl)
         assert service._intent_router is not None

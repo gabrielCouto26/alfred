@@ -1,5 +1,6 @@
 """Modelos de dados para o Alfred."""
 
+import hashlib
 from datetime import datetime
 from enum import Enum
 
@@ -59,6 +60,12 @@ class IntentDecision(BaseModel):
     required_clarification: str | None = Field(default=None, description="Informação necessária")
     simulated_tool_name: str | None = Field(default=None, description="Nome da tool simulada")
     risk_labels: list[str] = Field(default_factory=list, description="Rótulos de risco")
+
+    @property
+    def decision_hash(self) -> str:
+        """Hash determinístico da decisão para correlação sem expor conteúdo."""
+        content = f"{self.category.value}:{self.confidence:.2f}:{self.rationale_code}"
+        return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
 class SafetyDecision(BaseModel):
