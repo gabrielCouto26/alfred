@@ -52,7 +52,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
-    "integration: tests de integração entre componentes",
+    "unit: testes unitários",
+    "integration: tests de integración entre componentes",
     "e2e: pruebas de extremo a extremo da CLI",
 ]
 

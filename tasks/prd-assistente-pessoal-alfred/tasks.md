@@ -9,6 +9,7 @@
 - [x] 5.0 Implementar roteador de intencao com saida estruturada e dataset avaliavel
 - [x] 6.0 Implementar servico principal de orquestracao e tools simuladas
 - [x] 7.0 Implementar observabilidade segura com logs locais e LangSmith opcional
+- [x] 8.0 Consolidar fluxo E2E da CLI, documentacion minima de uso e validacion do MVP
 
 ## Status
 
@@ -19,6 +20,7 @@
 - Task 5.0: **COMPLETA** (26 testes, lint & typecheck aprovados)
 - Task 6.0: **COMPLETA** (11 unit tests + 7 integration tests, 100% pass)
 - Task 7.0: **COMPLETA** (170 testes totales, lint & typecheck sem regressões)
+- Task 8.0: **COMPLETA** (190 testes totales; CLI consolidada, E2E en proceso real, escenarios del PRD y documentacion minima)
 
 ## Notas
 
@@ -77,3 +79,14 @@
 - Integração com `AssistantService` via `observability.get_telemetry_client()`, respeitando `--no-trace`
 - Correção de bugs pre-existentes que bloqueavam a suite: deadlock `Lock`→`RLock` en session_store, serialização JSON de datetimes (`model_dump(mode="json")`), y default-deny en `_prompt_confirmation` (EOFError/OSError)
 - 21 tests de unidade + 7 tests de integração para telemetry (ausência de contenido bruto verificada con SpyTelemetry)
+
+### Task 8.0: Consolidacion E2E, documentacion y validacion del MVP
+- CLI consolidada en un unico modulo `src/alfred/cli.py` (eliminado el paquete duplicado `src/alfred/cli/`); ahora el adaptador llama a `create_assistant_service()` y renderiza la respuesta real en texto/JSON
+- Fix de exit codes: Typer 0.27 no propaga `return int`; se usa `raise typer.Exit(code)` explicitamente
+- Fix de `--json` + confirmacion: en modo JSON la confirmacion interactiva queda deshabilitada (default-deny) para no contaminar stdout
+- `HeuristicIntentRouter` (offline, deterministico) seleccionable con `ALFRED_ROUTER=heuristic`; no importa langchain en modo offline (routing/__init__ con `__getattr__` perezoso)
+- `ALFRED_DATA_DIR` aísla la persistencia de sesiones para tests y uso local
+- 7 tests E2E en proceso real (texto, `--json`, `--session`, `--no-trace`, bloqueo, confirmacion, fuera de alcance) + 9 escenarios de integracion del PRD (8.3) + baseline de acurácia heuristico >= 85% sobre el dataset
+- Test de no-ejecucion de automatizaciones reales (marker file nunca se crea)
+- README reescrito: configuracion de entorno, uso CLI, tracing, tests/evaluacion y limitaciones explicitas del MVP
+- 190 testes totales pass; ruff limpio en archivos tocados; mypy sin errores nuevos (baseline pre-existente intacto)

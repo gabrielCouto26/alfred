@@ -1,124 +1,135 @@
-"""Testes unitários para o módulo CLI."""
+"""Testes unitários de la CLI (parsing de argumentos y renderizado)."""
 
 import json
-import subprocess
-import sys
-from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
+from typer.testing import CliRunner
+
+from alfred.cli import app
+from alfred.exit_codes import EXIT_INPUT_ERROR, EXIT_INTERNAL_ERROR, EXIT_SUCCESS
+from alfred.models import (
+    AssistantResponse,
+    IntentCategory,
+    SafetyStatus,
+)
+
+
+@pytest.fixture
+def cli_runner(monkeypatch):
+    """Runner con servicio mockeado para pruebas unitarias."""
+
+    mock_service = MagicMock()
+    mock_service.handle.return_value = AssistantResponse(
+        text="Respuesta de prueba",
+        category=IntentCategory.CHITCHAT,
+        safety_status=SafetyStatus.ALLOW,
+        session_id="default-cli-session",
+        metadata={"rationale_code": "test"},
+    )
+    monkeypatch.setattr(
+        "alfred.cli.create_assistant_service", lambda: mock_service
+    )
+    return CliRunner(), mock_service
 
 
 class TestCLIArgumentParsing:
-    """Testes de parsing de argumentos da CLI."""
-    
+    """Testes de parsing de argumentos."""
+
     @pytest.mark.unit
-    def test_cli_requires_message(self, temp_app_dir):
-        """A CLI deve requerer mensagem como argumento."""
-        result = subprocess.run(
-            ["alfred"],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 1
-        assert "mensagem é obrigatória" in result.stderr.lower()
-    
+    def test_cli_requires_message(self, cli_runner):
+        runner, _ = cli_runner
+        result = runner.invoke(app, [])
+
+        assert result.exit_code == EXIT_INPUT_ERROR
+        assert "mensaje es obligatorio" in result.stderr.lower()
+
     @pytest.mark.unit
-    def test_cli_accepts_session_flag(self, temp_app_dir):
-        """A CLI deve aceitar flag --session."""
-        result = subprocess.run(
-            [
-                "alfred",
-                "test message",
-                "--session", "test-session"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 0
-        assert "test message" in result.stdout or result.returncode == 0
-    
+    def test_cli_requires_message_json(self, cli_runner):
+        runner, _ = cli_runner
+        result = runner.invoke(app, ["--json"])
+
+        assert result.exit_code == EXIT_INPUT_ERROR
+        data = json.loads(result.stdout)
+        assert data["error"] == "INPUT_ERROR"
+
     @pytest.mark.unit
-    def test_cli_accepts_json_flag(self, temp_app_dir):
-        """A CLI deve aceitar flag --json."""
-        result = subprocess.run(
-            [
-                "alfred",
-                "test message",
-                "--json"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 0
-        try:
-            json.loads(result.stdout)
-            assert True
-        except json.JSONDecodeError:
-            assert False, "Saída não é JSON válido"
-    
+    def test_cli_accepts_session_flag(self, cli_runner):
+        runner, mock_service = cli_runner
+        result = runner.invoke(app, ["hola", "--session", "unit-session"])
+
+        assert result.exit_code == EXIT_SUCCESS
+        assert result.stdout.strip() == "Respuesta de prueba"
+
     @pytest.mark.unit
-    def test_cli_accepts_no_trace_flag(self, temp_app_dir):
-        """A CLI deve aceitar flag --no-trace."""
-        result = subprocess.run(
-            [
-                "alfred",
-                "test message",
-                "--no-trace"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 0
-    
+    def test_cli_passes_session_id(self, cli_runner):
+        runner, mock_service = cli_runner
+        result = runner.invoke(app, ["hola", "--session", "unit-session"])
+
+        assert result.exit_code == EXIT_SUCCESS
+        request = mock_service.handle.call_args[0][0]
+        assert request.session_id == "unit-session"
+
     @pytest.mark.unit
-    def test_cli_invalid_input_returns_error_code(self, temp_app_dir):
-        """CLI deve retornar código de erro para entradas inválidas."""
-        result = subprocess.run(
-            ["alfred"],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
+    def test_cli_accepts_json_flag(self, cli_runner):
+        runner, mock_service = cli_runner
+        result = runner.invoke(app, ["hola", "--json"])
+
+        assert result.exit_code == EXIT_SUCCESS
+        data = json.loads(result.stdout)
+        assert data["text"] == "Respuesta de prueba"
+        assert data["category"] == "CHITCHAT"
+
+    @pytest.mark.unit
+    def test_cli_accepts_no_trace_flag(self, cli_runner):
+        runner, mock_service = cli_runner
+        result = runner.invoke(app, ["hola", "--no-trace"])
+
+        assert result.exit_code == EXIT_SUCCESS
+        request = mock_service.handle.call_args[0][0]
+        assert request.trace_enabled is False
+
+    @pytest.mark.unit
+    def test_cli_trace_enabled_by_default(self, cli_runner):
+        runner, mock_service = cli_runner
+        result = runner.invoke(app, ["hola"])
+
+        assert result.exit_code == EXIT_SUCCESS
+        request = mock_service.handle.call_args[0][0]
+        assert request.trace_enabled is True
+
+    @pytest.mark.unit
+    def test_cli_internal_error_exit_code(self, cli_runner, monkeypatch):
+        runner, mock_service = cli_runner
+        mock_service.handle.side_effect = RuntimeError("boom")
+        monkeypatch.setattr(
+            "alfred.cli.create_assistant_service", lambda: mock_service
         )
-        
-        assert result.returncode == 1
+
+        result = runner.invoke(app, ["hola"])
+
+        assert result.exit_code == EXIT_INTERNAL_ERROR
+        assert "Error interno" in result.stderr
 
 
 class TestCLIOutputFormats:
-    """Testes de formatos de saída da CLI."""
-    
+    """Testes de formatos de salida."""
+
     @pytest.mark.unit
-    def test_cli_text_output_is_human_readable(self, temp_app_dir):
-        """Saída em texto deve ser legível."""
-        result = subprocess.run(
-            ["alfred", "test message"],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 0
+    def test_cli_text_output_is_human_readable(self, cli_runner):
+        runner, _ = cli_runner
+        result = runner.invoke(app, ["hola"])
+
+        assert result.exit_code == EXIT_SUCCESS
         assert result.stdout.strip()
-        assert not result.stdout.startswith("{")
-    
+        assert not result.stdout.strip().startswith("{")
+
     @pytest.mark.unit
-    def test_cli_json_output_is_valid_json(self, temp_app_dir):
-        """Saída em JSON deve ser válida."""
-        result = subprocess.run(
-            ["alfred", "test message", "--json"],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result.returncode == 0
+    def test_cli_json_output_is_valid_json(self, cli_runner):
+        runner, _ = cli_runner
+        result = runner.invoke(app, ["hola", "--json"])
+
+        assert result.exit_code == EXIT_SUCCESS
         data = json.loads(result.stdout)
         assert isinstance(data, dict)
-        assert "text" in data or "error" in data
+        assert "text" in data

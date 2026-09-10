@@ -1,80 +1,65 @@
-"""Testes de integração para o módulo CLI."""
+"""Testes de integración de la CLI (proceso real con entorno aislado)."""
 
 import json
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
 
 class TestCLIIntegration:
-    """Testes de integração da CLI."""
-    
+    """Testes de integración de la CLI."""
+
     @pytest.mark.integration
-    def test_cli_full_flow(self, temp_app_dir):
-        """Fluxo completo da CLI com sessão."""
-        result = subprocess.run(
-            [
-                "alfred",
-                "Olá, você está funcionando?",
-                "--session", "integration-test-1",
-                "--json"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
+    def test_cli_full_flow(self, run_cli):
+        """Flujo completo de la CLI con sesión."""
+        result = run_cli(
+            ["Olá, você está funcionando?", "--session", "integration-test-1", "--json"]
         )
-        
+
         assert result.returncode == 0
         data = json.loads(result.stdout)
         assert data.get("category") == "CHITCHAT"
         assert data.get("safety_status") == "ALLOW"
-        assert "session_id" in data
-        assert "integration-test-1" in result.stdout
-    
+        assert data.get("session_id") == "integration-test-1"
+
     @pytest.mark.integration
-    def test_cli_multiple_sessions(self, temp_app_dir):
-        """CLI deve suportar múltiplas sessões."""
-        session1 = "multi-session-1"
-        session2 = "multi-session-2"
-        
-        result1 = subprocess.run(
-            ["alfred", "Primeira sessão", "--session", session1],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        result2 = subprocess.run(
-            ["alfred", "Segunda sessão", "--session", session2],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
-        )
-        
-        assert result1.returncode == 0
-        assert result2.returncode == 0
-        assert "Primeira sessão" in result1.stdout or result1.returncode == 0
-        assert "Segunda sessão" in result2.stdout or result2.returncode == 0
-    
+    def test_cli_multiple_sessions(self, run_cli):
+        """La CLI debe soportar múltiples sesiones aisladas."""
+        first = run_cli(["Primeira sessão", "--session", "multi-1", "--no-trace"])
+        second = run_cli(["Segunda sessão", "--session", "multi-2", "--no-trace"])
+
+        assert first.returncode == 0
+        assert second.returncode == 0
+        assert first.stdout.strip()
+        assert second.stdout.strip()
+
     @pytest.mark.integration
-    def test_cli_json_and_session_flags(self, temp_app_dir):
-        """CLI deve combinar flags --json e --session."""
-        session_id = "combined-flags-test"
-        
-        result = subprocess.run(
-            [
-                "alfred",
-                "Teste combinado",
-                "--session", session_id,
-                "--json"
-            ],
-            capture_output=True,
-            text=True,
-            cwd=str(Path(__file__).parent.parent.parent)
+    def test_cli_json_and_session_flags(self, run_cli):
+        """La CLI debe combinar flags --json y --session."""
+        result = run_cli(
+            ["Teste combinado", "--session", "combined-flags", "--json", "--no-trace"]
         )
-        
+
         assert result.returncode == 0
         data = json.loads(result.stdout)
-        assert data.get("session_id") == session_id
+        assert data.get("session_id") == "combined-flags"
+
+    @pytest.mark.integration
+    def test_cli_error_without_message(self, run_cli):
+        """Sin mensaje la CLI debe fallar con código de error."""
+        result = run_cli([])
+
+        assert result.returncode == 1
+        assert "mensaje es obligatorio" in result.stderr.lower()
+
+    @pytest.mark.integration
+    def test_cli_config_error_without_key_and_llm_router(self, run_cli):
+        """Sin OPENROUTER_API_KEY y con router LLM, error claro de configuración."""
+        result = run_cli(
+            ["hola", "--json", "--no-trace"],
+            env_extra={"ALFRED_ROUTER": "llm"},
+        )
+
+        assert result.returncode == 2
+        data = json.loads(result.stdout)
+        assert data.get("error") == "INTERNAL_ERROR"
+        assert "OPENROUTER_API_KEY" in data.get("message", "")

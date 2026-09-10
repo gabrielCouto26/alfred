@@ -32,13 +32,13 @@ Consolidar a primeira etapa do Alfred validando o fluxo real pela CLI, documenta
 
 ## Subtarefas
 
-- [ ] 8.1 Criar testes E2E da CLI em processo real com dependencias externas mockadas ou desabilitadas.
-- [ ] 8.2 Cobrir execucao com texto padrao, `--json`, `--session` e `--no-trace`.
-- [ ] 8.3 Criar cenarios de integracao representativos dos requisitos funcionais do PRD.
-- [ ] 8.4 Validar que nenhuma automacao real, shell livre ou tool com efeito colateral e executada.
-- [ ] 8.5 Documentar uso local minimo, variaveis de ambiente e limitacoes explicitas do MVP.
-- [ ] 8.6 Documentar como executar testes e avaliacao de intencao.
-- [ ] 8.7 Executar suite automatizada completa e corrigir apenas falhas dentro do escopo da implementacao.
+- [x] 8.1 Criar testes E2E da CLI em processo real com dependencias externas mockadas ou desabilitadas.
+- [x] 8.2 Cobrir execucao com texto padrao, `--json`, `--session` e `--no-trace`.
+- [x] 8.3 Criar cenarios de integracao representativos dos requisitos funcionais do PRD.
+- [x] 8.4 Validar que nenhuna automacao real, shell livre ou tool com efeito colateral e executada.
+- [x] 8.5 Documentar uso local minimo, variaveis de ambiente e limitacoes explicitas do MVP.
+- [x] 8.6 Documentar como executar testes e avaliacao de intencao.
+- [x] 8.7 Executar suite automatizada completa e corrigir apenas falhas dentro do escopo da implementacao.
 
 ## Detalhes de Implementacao
 
@@ -56,9 +56,9 @@ Consolidar a primeira etapa do Alfred validando o fluxo real pela CLI, documenta
 
 ## Testes da Tarefa
 
-- [ ] Testes de unidade afetados pela consolidacao final, se houver ajustes de comportamento.
-- [ ] Testes de integracao cobrindo cenarios representativos do PRD e pipeline de avaliacao.
-- [ ] Testes E2E da CLI em processo real para texto padrao, JSON, sessao, tracing desabilitado e bloqueios de seguranca.
+- [x] Testes de unidade afetados pela consolidacao final, se houver ajustes de comportamento.
+- [x] Testes de integracao cobrindo cenarios representativos do PRD e pipeline de avaliacao.
+- [x] Testes E2E da CLI em processo real para texto padrao, JSON, sessao, tracing desabilitado e bloqueios de seguranca.
 
 ## Arquivos relevantes
 
